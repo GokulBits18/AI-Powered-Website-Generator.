@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Website Builder</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f4f4f5; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .header { text-align: center; margin-bottom: 10px; }
+        textarea { width: 100%; height: 100px; padding: 12px; border: 1px solid #ccc; border-radius: 6px; resize: vertical; font-size: 16px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 15px; align-items: center; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .external-link { display: none; background: #10b981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; text-align: center; width: fit-content; }
+        .external-link:hover { background: #059669; }
+        .output-container { display: flex; gap: 20px; height: 600px; }
+        .panel { flex: 1; display: flex; flex-direction: column; background: white; border-radius: 6px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .panel-header { background: #f8fafc; padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold; }
+        iframe { width: 100%; height: 100%; border: none; background: white; }
+        pre { margin: 0; padding: 15px; overflow: auto; height: 100%; background: #1e293b; color: #f8fafc; font-size: 14px; }
+        #loading { display: none; color: #2563eb; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>AI Web Builder</h1>
+        <p>Describe your website. The AI will generate the code and paint the images automatically.</p>
+    </div>
+    <div>
+        <textarea id="promptInput" placeholder="Enter your prompt here..."></textarea>
+    </div>
+    <div class="btn-group">
+        <button id="generateBtn">Build Website</button>
+        <span id="loading">Generating logic and visuals... Please wait.</span>
+        <a id="standaloneLink" href="#" target="_blank" class="external-link">🌐 Open Site in New Tab</a>
+    </div>
+    <div class="output-container" id="webOutput">
+        <div class="panel">
+            <div class="panel-header">Live Preview</div>
+            <iframe id="previewIframe"></iframe>
+        </div>
+        <div class="panel">
+            <div class="panel-header">Generated Code</div>
+            <pre><code id="codeDisplay">// HTML, CSS, and JS output...</code></pre>
+        </div>
+    </div>
+</div>
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const promptInput = document.getElementById('promptInput');
+    const loading = document.getElementById('loading');
+    const previewIframe = document.getElementById('previewIframe');
+    const codeDisplay = document.getElementById('codeDisplay');
+    const standaloneLink = document.getElementById('standaloneLink');
+
+    generateBtn.addEventListener('click', async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) return alert('Please enter a prompt!');
+
+        generateBtn.disabled = true;
+        loading.style.display = 'inline';
+        standaloneLink.style.display = 'none';
+        codeDisplay.textContent = '// Building site and generating image...';
+        previewIframe.srcdoc = '';
+
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+            const data = await response.json();
+            if (data.success) {
+                previewIframe.srcdoc = data.html;
+                codeDisplay.textContent = data.html;
+                standaloneLink.href = data.url;
+                standaloneLink.style.display = 'inline-block';
+            } else {
+                codeDisplay.textContent = 'Error: ' + data.error;
+            }
+        } catch (error) {
+            codeDisplay.textContent = 'Fetch Error: ' + error.message;
+        } finally {
+            generateBtn.disabled = false;
+            loading.style.display = 'none';
+        }
+    });
+</script>
+</body>
+</html>
